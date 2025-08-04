@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Country Data Visualisation</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        :root {
+            --dark-color: #2c3e50;
+            --light-color: #ecf0f1;
+            --background-color: black;
+            --border-color: #333333;
+            --text-color: #CCCCCC;
+            --highlight-color: #FF4136;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(255, 255, 255, 0.1);
+            --transition-speed: 0.3s;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--background-color);
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        h1 {
+            color: var(--text-color);
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        h2 {
+            color: var(--text-color);
+            margin: 0 0 1.5rem 0;
+            font-weight: 500;
+            text-decoration: underline;
+        }
+
+        form {
+            background-color: var(--background-color);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+            margin-bottom: 2rem;
+        }
+
+        fieldset {
+            border: none;
+            border-radius: var(--border-radius);
+            padding: 1rem;
+        }
+
+        label {
+            display: block;
+            cursor: pointer;
+        }
+
+        input[type="radio"] {
+            margin-right: 0.5rem;
+            cursor: pointer;
+        }
+
+        select {
+            width: 100%;
+            padding: 0.5rem;
+            margin: 0.5rem 0 1rem;
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--background-color);
+        }
+
+        button {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color var(--transition-speed);
+        }
+
+        button:hover {
+            background-color: var(--dark-color);
+            border-color: white;
+        }
+
+        .form-container, .chart-container, .table-container {
+            background-color: var(--background-color);
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 2rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: var(--background-color);
+            font-weight: 500;
+        }
+
+        tr:hover {
+            background-color: rgba(100, 100, 100, 0.9);
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .section-title::before {
+            content: "";
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            background-color: var(--background-color);
+            margin-right: 8px;
+            border-radius: 50%;
+        }
+
+        .tooltip {
+            position: absolute;
+            padding: 0.75rem;
+            background: var(--background-color);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            pointer-events: none;
+            font-size: 0.9rem;
+            max-width: 300px;
+            line-height: 1.4;
+            z-index: 10;
+            box-shadow: var(--box-shadow);
+        }
+
+        .tooltip strong {
+            color: var(--text-color);
+            display: block;
+            margin-bottom: 0.3rem;
+            font-size: 1.1rem;
+        }
+
+        .node:hover {
+            stroke: var(--light-color);
+            stroke-width: 2px;
+            transition: stroke-width var(--transition-speed);
+            box-shadow: var(--box-shadow);
+        }
+
+        .form-section {
+            margin-bottom: 1.5rem;
+            background-color: var(--background-color);
+            padding: 1rem;
+            border-radius: var(--border-radius);
+        }
+
+        .form-section label {
+            font-weight: 500;
+            margin-bottom: 0.3rem;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            
+            form {
+                padding: 1rem;
+            }
+            
+            .chart-container svg {
+                width: 100%;
+                height: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Country Data Visualisation</h1>
+    
+    <!-- Exercise 1: Form -->
+    <form id="dataForm" class="form-container">
+        <fieldset>
+            <h2>Select Data to Display</h2>
+            
+            <div>
+                <div style="display: flex">
+                    <input type="radio" id="country" name="dataType" value="country" checked>
+                    <label for="country">By Country</label>
+                </div>
+                <select id="countryOption">
+                    <option value="population">Population Size</option>
+                    <option value="borders">Number of Borders</option>
+                    <option value="timezones">Number of Timezones</option>
+                    <option value="languages">Number of Languages</option>
+                </select>
+            </div>
+            
+            <div style="margin-top: 10px;">
+                <div style="display: flex">
+                    <input type="radio" id="region" name="dataType" value="region">
+                    <label for="region">By Region</label>
+                </div>
+                <select id="regionOption">
+                    <option value="countryCount">Number of Countries</option>
+                    <option value="timezoneCount">Number of Unique Timezones</option>
+                </select>
+            </div>
+            
+            <button type="button" id="updateBtn" style="margin-top: 15px;">Update Visualisation</button>
+        </fieldset>
+    </form>
+    
+    <!-- Exercise 3: Bubble Chart -->
+    <div class="chart-container">
+        <h2>Bubble Chart</h2>
+        <!-- Highlight selection dropdown -->
+        <label for="highlightSelect"><strong>Highlight:</strong></label>
+        <select id="highlightSelect"></select>
+        <div id="tooltip" class="tooltip" style="opacity:0"></div>
+        <div id="chart"></div>
+    </div>
+    
+    <!-- Exercise 2: Table -->
+    <div class="table-container">
+        <h2>Data Table</h2>
+        <div id="table"></div>
+    </div>
+
+    <script>
+        // Add event listener to update selected dataType on option change
+        document.querySelectorAll('option').forEach(option => {
+            option.addEventListener('click', (e) => {
+                const radioInput = option.parentElement.parentElement.querySelector('input[type="radio"]');
+                if (radioInput) {
+                    radioInput.checked = true;
+                }
+            });
+        });
+
+        // Load and process data
+        fetch('data/countries.json')
+            .then(response => response.json())
+            .then(data => {               
+                document.getElementById('updateBtn').addEventListener('click', () => {
+                    updateVisualisation(data);
+                });
+                // Initial visualisation
+                updateVisualisation(data);
+            });
+        
+        // Countries
+        function processCountryData(data, option) {
+            return data.map(country => {
+                let value;
+                let optionName;
+                switch(option) {
+                    case 'population':
+                        optionName = 'Population'
+                        value = country.population;
+                        break;
+                    case 'borders':
+                        optionName = 'Number of Borders';    
+                        value = country.borders ? country.borders.length : 0;
+                        // Rather than display the country abbreviation, retrieve the full name
+                        let borderCountries = [];
+                        if (country.borders) {
+                            country.borders.forEach(alpha3Code => {
+                                const borderCountry = data.find(c => c.alpha3Code === alpha3Code);
+                                if (borderCountry) {
+                                    borderCountries.push(borderCountry.name);
+                                }
+                            });
+                            borderCountries = borderCountries.join('<br>');
+                        }
+                        country.borderCountries = borderCountries;
+                        break;
+                    case 'timezones':
+                        optionName = 'Number of Timezones'    
+                        value = country.timezones ? country.timezones.length : 0;
+                        let timezoneList = country.timezones ? country.timezones.join('<br>') : 'N/A';
+                        country.timezoneList = timezoneList;
+                        break;
+                    case 'languages':
+                        optionName = 'Number of Languages'    
+                        value = country.languages ? country.languages.length : 0;
+                        let languages = country.languages ? country.languages.map(l => l.name).join('<br>') : 'N/A';
+                        country.languages = languages;                        
+                        break;
+                }
+                return {
+                    name: country.name,
+                    value: value,
+                    option: optionName, // Store the selected option
+                    region: country.region,
+                    details: country
+                };
+            });
+        }
+        
+        // Regions
+        function processRegionData(data, option) {
+            const regions = {};
+            
+            data.forEach(country => {
+                const region = country.region || 'Unknown';
+                
+                if (!regions[region]) {
+                    regions[region] = {
+                        name: region,
+                        countries: new Set(),
+                        timezones: new Set()
+                    };
+                }
+                
+                regions[region].countries.add(country.name);
+                
+                if (country.timezones) {
+                    country.timezones.forEach(tz => regions[region].timezones.add(tz));
+                }
+            });
+            
+            return Object.values(regions).map(region => {
+                let value;
+                let optionName;
+                if (option === 'countryCount') {
+                    value = region.countries.size;
+                    optionName = 'Country Count';
+                } else {
+                    value = region.timezones.size;
+                    optionName = 'Timezone Count';
+                }
+
+                return {
+                    name: region.name,
+                    value: value,
+                    option: optionName,
+                    details: {
+                        countries: Array.from(region.countries),
+                        timezones: Array.from(region.timezones)
+                    }
+                };
+            });
+        }
+
+        function updateVisualisation(data) {
+            const dataType = document.querySelector('input[name="dataType"]:checked').value;
+            let selectedOption, selectedData;
+            if (dataType === 'country') {
+                selectedOption = document.getElementById('countryOption').value;
+                selectedData = processCountryData(data, selectedOption);
+            } else {
+                selectedOption = document.getElementById('regionOption').value;
+                selectedData = processRegionData(data, selectedOption);
+            }
+            // Update chart, chart highlight options and table
+            updateChart(selectedData, dataType, selectedOption, activeSelection);
+            updateChartHighlightOptions(selectedData, dataType);
+            updateTable(selectedData, selectedOption);
+        }
+
+        // Highlight selection
+        let activeSelection = null;
+        function updateChartHighlightOptions(data, dataType) {
+            const select = document.getElementById('highlightSelect');
+            select.innerHTML = '';
+
+            // Add a 'None' option as the first option
+            const noneOption = document.createElement('option');
+            noneOption.value = '';
+            noneOption.textContent = 'None';
+            noneOption.selected = true;
+            select.appendChild(noneOption);
+            
+            // Add all other options
+            data.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.name;
+                option.textContent = item.name;
+                select.appendChild(option);
+            });
+
+            // No selection by default
+            activeSelection = null;
+
+            // Add event listener to update highlight on change
+            select.onchange = function() {
+                activeSelection = this.value;
+                updateHighlight(activeSelection);
+            }
+        }
+
+        let chartCircles = {};
+
+        function updateHighlight(highlightName) {
+            // Reset all highlights with transition
+            Object.values(chartCircles).forEach(circle => {
+                circle.transition()
+                    .duration(200)
+                    .attr('stroke', '#fff')
+                    .attr('stroke-width', 1.5);
+            });
+    
+            // Apply highlight to selected with transition
+            if (highlightName && chartCircles[highlightName]) {
+                chartCircles[highlightName].transition()
+                    .duration(200)
+                    .attr('stroke', 'red')
+                    .attr('stroke-width', 3);
+            }
+        }
+
+        function updateChart(data, dataType, selectedOption, highlightName) {
+            // Clear previous chart
+            d3.select('#chart').html('');
+            // Clear previous tooltip
+            d3.select('#tooltip').style('opacity', 0);
+            
+            // We are using the D3 pack layout to create a bubble chart.
+            // The pack layout is typically used to visualise hierarchical data, but achieves the visual effect we want.
+            const root = d3.hierarchy({children: data})
+                .sum(d => d.value || 0)  // Size based on value of selected metric
+                .sort((a, b) => b.value - a.value);
+            
+            const pack = d3.pack()
+                .size([1200, 800])
+                .padding(3);
+            
+            // Calculate the pack layout
+            pack(root);
+            
+            // Create SVG container
+            const svg = d3.select('#chart')
+                .append('svg')
+                .attr('width', 1200)
+                .attr('height', 800)
+                .attr('viewBox', '0 0 1200 800')
+                .style('font', '12px sans-serif')
+            
+            // Create a group for all chart elements that will be transformed
+            const chartGroup = svg.append('g');
+            
+            // Add bubbles
+            const node = chartGroup.selectAll('g')
+                .data(root.leaves())
+                .join('g')
+                .attr('transform', d => `translate(${d.x},${d.y})`);
+
+            // Update stroke color based on highlight
+            node.selectAll('circle').remove(); // Remove previous circles if any
+            
+            // Add circles representing the values
+            const circle = node.append('circle')
+                .attr('data-name', d => d.data.name)    
+                .attr('r', d => d.r)
+                .attr('fill', 'black')
+                .attr('stroke', d => (highlightName && d.data.name === highlightName) ? 'var(--highlight-color)' : 'white')
+                .attr('stroke-width', d => (highlightName && d.data.name === highlightName) ? 5 : 2)        
+                .attr('opacity', 0.7)
+                .on('mouseover', function(event, d) {
+                    // Highlight bubble
+                    d3.select(this).attr('stroke', 'var(--highlight-color)');
+                    
+                    // Show tooltip
+                    const tooltip = d3.select('#tooltip');
+                    tooltip.transition()
+                        .duration(200)
+                        .style('opacity', 1);
+                    
+                    let content = `<strong>${d.data.name}</strong>${d.data.option}: ${d.data.value.toLocaleString()}<br>`;
+                    // Extra Details on the Tooltip
+                    if (dataType === 'country') {
+                        // Borders
+                        if (selectedOption === 'borders') {
+                            content += `<br><strong>Border Countries:</strong>${d.data.details.borderCountries}`
+                        }
+                        // Timezones
+                        if (selectedOption === 'timezones') {
+                            content += `<br><strong>Timezones:</strong>${d.data.details.timezoneList}`
+                        }
+                        // Languages
+                        if (selectedOption === 'languages') {
+                            content += `<br><strong>Languages:</strong>${d.data.details.languages}`
+                        }
+                    } else {
+                        // Region details
+                        // Languages
+                        if (selectedOption === 'countryCount') {
+                            content += `<br><strong>Countries:</strong> ${d.data.details.countries.sort().join(', ')}`;
+                        }
+                        // Timezones
+                        if (selectedOption === 'timezoneCount') {
+                            content += `<br><strong>Timezones:</strong>${d.data.details.timezones.sort((a, b) => {
+                                // Parse UTC offset to numerical value to allow correct sorting
+                                const parseOffset = tz => {
+                                    const match = tz.match(/UTC([+-])(\d+):(\d+)/);
+                                    if (!match) return 0;
+                                    const sign = match[1] === '+' ? 1 : -1;
+                                    return sign * (parseInt(match[2]) * 60 + parseInt(match[3]));
+                                };
+                                return parseOffset(a) - parseOffset(b);
+                            }).join(', ')}`;
+                        }
+                    }
+                    
+                    tooltip.html(content)
+                        .style('left', (event.pageX + 10) + 'px')
+                        .style('top', (event.pageY - 28) + 'px');
+                })
+                .on('mouseleave', function() {
+                    d3.select(this).attr('stroke', d => (highlightName && d.data.name === highlightName) ? 'var(--highlight-color)' : 'white');
+                    d3.select('#tooltip').style('opacity', 0);
+                });
+            
+            // Store reference for later use
+            circle.each(function(d) {
+                chartCircles[d.data.name] = d3.select(this);
+            });
+            
+            // Add labels to each node if it is large enough
+            node.filter(d => d.r > 30).each(function(d) {
+                const text = d3.select(this).append('text')
+                    .style('text-anchor', 'middle')
+                    .style('fill', 'white')
+                    .style('pointer-events', 'none')
+                    .style('opacity', 0); // Start with invisible text
+                
+                // Add text with word wrapping
+                const words = d.data.name.split(/\s+/);
+                let lineNumber = 0;
+                const lineHeight = 1.2; // ems
+                let textHeight = 0;
+                
+                // Create all text spans first
+                words.forEach((word, i) => {
+                    text.append('tspan')
+                        .attr('x', 0)
+                        .attr('dy', i === 0 ? '0' : `${lineHeight}em`)
+                        .text(word);
+                    lineNumber++;
+                    textHeight += i === 0 ? 1 : lineHeight;
+                });
+                
+                // Add value
+                text.append('tspan')
+                    .attr('x', 0)
+                    .attr('dy', `${lineHeight}em`)
+                    .text(d.data.value.toLocaleString());
+                textHeight += lineHeight;
+                
+                // Check if text fits within the bubble
+                const bbox = text.node().getBBox();
+                const maxWidth = d.r * 1.8; // 90% of bubble width
+                const maxHeight = d.r * 1.8; // 90% of bubble height
+                
+                // Only show text if it fits within the bubble
+                if (bbox.width <= maxWidth && (textHeight * 12) <= maxHeight) {
+                    // Calculate vertical offset to center the text in the bubble
+                    const verticalOffset = -((textHeight * 12) / 2) + (lineHeight * 6);
+                    text.attr('y', verticalOffset);
+                    text.style('opacity', 1);
+                } else {
+                    text.remove(); // Remove if it doesn't fit
+                }
+            });
+        }
+        
+        function updateTable(data, selectedOption) {
+            const table = document.getElementById('table');
+            table.innerHTML = '';
+            
+            const tbl = document.createElement('table');
+            
+            // Create header
+            const header = tbl.createTHead();
+            const headerRow = header.insertRow();
+            headerRow.insertCell().textContent = 'Name';
+            headerRow.insertCell().textContent = selectedOption;
+            
+            // Create body
+            const body = tbl.createTBody();
+            data.forEach(item => {
+                const row = body.insertRow();
+                row.insertCell().textContent = item.name;
+                row.insertCell().textContent = item.value.toLocaleString();
+            });
+            
+            table.appendChild(tbl);
+        }
+    </script>
+</body>
+</html>

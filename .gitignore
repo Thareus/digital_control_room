@@ -1,0 +1,8 @@
+.vscode/
+__pycache__/
+
+dcr-django-test-env/
+
+*.pyc
+*.pytest
+.pytest_cache/
