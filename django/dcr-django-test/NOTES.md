@@ -1,23 +1,8 @@
 # Digital Control Room - Django Test
 
-## Setup
-
-The instructions below are for use with venv, but of course you can setup the project however is most comfortable for you (virtualenv, pipenv, etc.). You will need python3.5+ to run this code.
-
-```bash
-python3 -m venv dcr-django-test-env
-source dcr-django-test-env/bin/activate
-
-cd dcr-django-test
-pip install -r requirements.txt
-
-cd testsite
-python manage.py runserver
-python manage.py update_country_listing
-python manage.py test
-```
-
 ## Exercises
+
+Some tests have been written for the countries app following the completion of the exercises.
 
 ### Exercise 1 - Complete Stats View
 
