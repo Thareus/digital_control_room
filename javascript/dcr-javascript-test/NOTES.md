@@ -20,3 +20,10 @@ To Run:
 - The labels for each bubble are constructed using the item name and first before they are filtered based on whether they will fit inside the bubble. This is to be able to accommodate large country names such as "United Kingdom of Great Britain and Northern Ireland".
 - Because of the disparity in values, a dropdown is available to highlight specific options. For instance, in the case of population size, the largest bubbles such as China and India dwarf the sizes of less-populated countries such as Luxembourg. As a side effect, the labels of these countries are not visible. To remedy this situation, the dropdown allows the user to find specific countries and highlight them in the chart.
 - When the user hovers over a bubble, a tooltip is displayed with extended information related to the selected option.
+
+### Additional Notes
+- I overwrite the value for each country's language from an array to a string, breaking the .map function needed for the chart. Visualising number of languages will work the first time, but will error after that. This is a pretty obvious bug and a bad one, I should have been more careful.
+- The chart itself does not scale correctly between different screen sizes.
+- The table header uses the raw key name from the data, which is not the most user-friendly. I should have used the option name from the label on the data.
+- I could have linked each row in the table to the highlight function, so that clicking on the row would highlight the bubble in the chart.
+- Upon each update of the visualisation, the chart, highlight options and table are recalculated. This is not the most efficient and results of previous visualisations could be cached, but the results are practically instantaneous and it was not a priority.
